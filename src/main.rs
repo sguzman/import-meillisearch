@@ -1,31 +1,37 @@
-use clap::{Arg, Command};
 use serde_json::{Value, json};
 use std::fs;
 use std::process;
 
-fn main() {
-    // Define the CLI arguments using clap
-    let matches = Command::new("JSON ID Inserter")
-        .version("1.0")
-        .author("Your Name")
-        .about("Adds unique IDs to JSON objects in an array")
-        .arg(
-            Arg::new("input")
-                .about("The JSON array string or path to a JSON file")
-                .required(true)
-                .index(1)
-                .takes_value(true),
-        )
-        .get_matches();
+use std::path::PathBuf;
 
-    // Get the input argument
-    let input = matches.value_of("input").unwrap();
+use clap::Parser;
+
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+struct Cli {
+    /// Optional key name
+    name: Option<String>,
+
+    /// Sets a custom config file
+    input: PathBuf,
+}
+
+fn main() {
+    let matches = Cli::parse();
+
+    // Get the input JSON file
+    let input = matches.input;
+
+    // Get set name of key if provided - default to "id"
+    let key_name = matches.name.unwrap_or_else(|| "id".to_string());
 
     // Read the JSON input (either from a file or directly as a string)
-    let input_json = if let Ok(file_content) = fs::read_to_string(input) {
-        file_content
-    } else {
-        input.to_string()
+    let input_json = match fs::read_to_string(&input) {
+        Ok(content) => content,
+        Err(_) => {
+            eprintln!("Failed to read input JSON file.");
+            process::exit(1);
+        }
     };
 
     // Parse the JSON array
@@ -38,10 +44,9 @@ fn main() {
     };
 
     // Add a unique `id` field to each object in the array
-    for (i, obj) in json_array.iter_mut().enumerate() {
-        if let Some(map) = obj.as_object_mut() {
-            map.insert("id".to_string(), json!(i + 1));
-        }
+    for (index, object) in json_array.iter_mut().enumerate() {
+        let id = index + 1;
+        object[key_name.as_str()] = json!(id);
     }
 
     // Print the modified JSON array
