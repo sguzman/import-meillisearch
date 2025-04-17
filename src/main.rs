@@ -7,13 +7,20 @@ use std::path::PathBuf;
 use clap::Parser;
 
 #[derive(Parser)]
+#[command(name = "JSON ID Adder")]
+#[command(about = "Adds a unique ID to each object in a JSON array")]
+#[command(author = "Salvador Guzman")]
+#[command(version = "1.0")]
 #[command(version, about, long_about = None)]
 struct Cli {
-    /// Optional key name
-    name: Option<String>,
-
     /// Sets a custom config file
+    #[arg(long)]
     input: PathBuf,
+
+    /// Optional key name
+    #[arg(long)]
+    #[arg(default_value = "id")]
+    name: String,
 }
 
 fn main() {
@@ -23,7 +30,7 @@ fn main() {
     let input = matches.input;
 
     // Get set name of key if provided - default to "id"
-    let key_name = matches.name.unwrap_or_else(|| "id".to_string());
+    let key_name = matches.name;
 
     // Read the JSON input (either from a file or directly as a string)
     let input_json = match fs::read_to_string(&input) {
