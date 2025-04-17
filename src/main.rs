@@ -1,23 +1,39 @@
+use clap::{Arg, Command};
 use serde_json::{Value, json};
-use std::env;
+use std::fs;
+use std::process;
 
 fn main() {
-    // Collect command-line arguments
-    let args: Vec<String> = env::args().collect();
+    // Define the CLI arguments using clap
+    let matches = Command::new("JSON ID Inserter")
+        .version("1.0")
+        .author("Your Name")
+        .about("Adds unique IDs to JSON objects in an array")
+        .arg(
+            Arg::new("input")
+                .about("The JSON array string or path to a JSON file")
+                .required(true)
+                .index(1)
+                .takes_value(true),
+        )
+        .get_matches();
 
-    // Ensure a JSON string is provided as an argument
-    if args.len() < 2 {
-        eprintln!("Usage: {} '<json_array>'", args[0]);
-        std::process::exit(1);
-    }
+    // Get the input argument
+    let input = matches.value_of("input").unwrap();
 
-    // Parse the JSON array from the command-line argument
-    let input_json = &args[1];
-    let mut json_array: Vec<Value> = match serde_json::from_str(input_json) {
+    // Read the JSON input (either from a file or directly as a string)
+    let input_json = if let Ok(file_content) = fs::read_to_string(input) {
+        file_content
+    } else {
+        input.to_string()
+    };
+
+    // Parse the JSON array
+    let mut json_array: Vec<Value> = match serde_json::from_str(&input_json) {
         Ok(array) => array,
         Err(_) => {
             eprintln!("Invalid JSON array provided.");
-            std::process::exit(1);
+            process::exit(1);
         }
     };
 
