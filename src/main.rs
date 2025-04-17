@@ -8,6 +8,8 @@ use clap::Parser;
 
 #[derive(Parser)]
 #[command(name = "JSON ID Adder")]
+#[command(bin_name = "import-meil")]
+#[command(color = clap::ColorChoice::Always)]
 #[command(about = "Adds a unique ID to each object in a JSON array")]
 #[command(author = "Salvador Guzman")]
 #[command(version = "1.0")]
